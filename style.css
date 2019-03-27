@@ -1,0 +1,9 @@
+h2 {
+  font-family: Impact, Haettenschweiler, 'Arial Narrow Bold', sans-serif;
+}
+
+.section {
+  display: flex;
+  align-items: center;
+  flex-direction: column;
+}
