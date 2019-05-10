@@ -104,28 +104,103 @@
         <iframe width="800" height="400" frameborder="0" scrolling="no" src="//plot.ly/~antonstenaxel/61.embed"></iframe>
 
         <h2>Bag-of-Words</h2>
+        <p>
+        I created a script that transforms the corpus to bag-of-words vectors. Additionally it calculated tf-idf and optionally the LDA. It only keeps the 1000 most common words (1% of unique words) to make it manageable, which still retains 66 % of the total number of words.
+
+        For instance </p>
+        <p class="example">['Stockholm',
+          'direkt',
+          'notering',
+          'nasdaq',
+          'omx',
+          'Stockholm',
+          'cap',
+          'lista',
+          'bolag',
+          'styrelse',
+          'bedöma',
+          'notering',
+          'komma',
+          'äga',
+          'första',
+          'halvår',
+          'framgå',
+          'pressmeddelande',
+          'dag',
+          'lista',
+          'first',
+          'north',
+          'börsredaktionen',
+          'nyhetsbyrå',
+          'direkt']</p>
+          <p> is turned into the BOW vector</p>
+          <p class="example">[(0, 2),
+            (8, 1),
+            (9, 2),
+            (21, 1),
+            (55, 1),
+            (68, 1),
+            (92, 2),
+            (101, 1),
+            (153, 1),
+            (155, 1),
+            (168, 1),
+            (176, 1),
+            (180, 1),
+            (194, 1),
+            (196, 2),
+            (197, 1),
+            (204, 1),
+            (208, 1),
+            (209, 1),
+            (210, 1),
+            (211, 1)]</p>
+            <p>which is turned to the if-idf vector </p>
+            <p class="example">[(0, 0.044471656715664214),
+              (8, 0.14658607992381323),
+              (9, 0.04771443001151147),
+              (21, 0.06071004029378088),
+              (55, 0.05134262091706973),
+              (68, 0.16048204650484016),
+              (92, 0.4127350984578276),
+              (101, 0.16847477254760929),
+              (153, 0.21641683430576114),
+              (155, 0.06794781460114734),
+              (168, 0.09107905959708487),
+              (176, 0.19027452656466873),
+              (180, 0.29432102709761115),
+              (194, 0.14826542830176798),
+              (196, 0.6051661283540677),
+              (197, 0.2331440461025338),
+              (204, 0.17233668737470673),
+              (208, 0.2143897847583252),
+              (209, 0.11955196670723481),
+              (210, 0.10938687638386194),
+              (211, 0.12800056230445672)]</p>
       </section>
+      <p>In addition to this, a LDA was trained using (arbitrarily) 100 topics, characterized by a distribution of words. Some of the topics are </p>
+      <p class="example">0.154*"fingerprint" + 0.128*"cards" + 0.087*"placera" + 0.024*"fpc" + 0.023*"lansering" + 0.018*"stod" + 0.017*"använda" + 0.016*"inleda" + 0.015*"kort" + 0.015*"framgå"</p>
+      <p class="example">0.154*"bud" + 0.141*"bostad" + 0.033*"stödja" + 0.029*"carnegie" + 0.024*"lägga" + 0.021*"rekommendera" + 0.018*"inleda" + 0.016*"projekt" + 0.015*"produktion" + 0.013*"kontant"</p>
       <section>
         <h1>Model</h1>
         <h2>Data-set</h2>
         <p>
-          To build the Data-set a method <span class="code">generate_datapoints</span> was created. It generates samples where there is at least one news article present as well as a set of criteria based on the four arguments</p>
+          To build the Data-set a method <span class="code">generate_datapoints</span> was created. It generates samples where there is at least one news article present as well as a set of criteria based on two arguments:</p>
           <ul>
             <li>inter-day change:   $\frac{\text{open}(d)}{\text{close}(d-1)} -1$</li>
-            <li>intra-day change:   $ \frac{\text{close}(d)}{\text{open}(d)} -1$</li>
-            <li>shadow-tolerance:   $ \text{abs}{\left[1-\frac{\text{open}(d)}{\text{low}(d)}\right]} $</li>
             <li>the trading value, which is the volume times the low price.</li>
           </ul>  
           <p> 
-        The listed arguemnts are for the positive samples where the intra-day change is positive, but the method also returns the negative equivalents. 
+        This dataset is then split into either "Positive" or "Negative" by applying a stop-loss trading strategy to the data-point.
   
-        For instance, calling <span class="code">generate_datapoints(0.02, 0.02, 0.01, 1e5)</span> results in 1480 'positive' and 1829 'negative' samples. An example of a positive datapoint is the Paxman stock on 2019-03-18 as a result of <a href="https://avanza.se/placera/pressmeddelanden/2019/03/17/paxman-ab-publ-paxman-meddelar-att-nccns-riktlinjer-nu-rekommenderar-skalpkylning-som-en-kategori-2a-behandling-for-patienter-med-brostcancer.html"> this article</a>.
+        For instance, calling <span class="code">generate_datapoints(0.02, 1e5)</span> and applying a stoploss algorithm that always buys at the open and holds until close, but sells if value decreases below -2%,  results in 3768 'positive' and 5236 'negative' samples. An example of a positive datapoint is the Paxman stock on 2019-03-18 as a result of <a href="https://avanza.se/placera/pressmeddelanden/2019/03/17/paxman-ab-publ-paxman-meddelar-att-nccns-riktlinjer-nu-rekommenderar-skalpkylning-som-en-kategori-2a-behandling-for-patienter-med-brostcancer.html"> this article</a>.
       <img id="paxman" src="ex.png" alt=""></p>
 
 
       <h2>Training</h2>
       </section>
-      <section><h1>Evaluation</h1></section>
+      <section><h1>Evaluation</h1>
+      </section>
     </div>
   </body>
 </html>
