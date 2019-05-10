@@ -1,0 +1,131 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta http-equiv="X-UA-Compatible" content="ie=edge" />
+    <link rel="stylesheet" href="presentation.css" />
+    <link
+      href="https://fonts.googleapis.com/css?family=Lato"
+      rel="stylesheet"
+    />
+    <script type="text/x-mathjax-config">
+      MathJax.Hub.Config({tex2jax: {inlineMath: [['$','$'], ['\\(','\\)']]}});
+    </script>
+    <script type="text/javascript"
+      src="http://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML">
+    </script>
+    <title>Presentation</title>
+  </head>
+  <body>
+    <div class="container">
+      <section>
+        <h1>The Data</h1>
+        <p>
+          In total, 297 074 news articles has been gathered from
+          <a href="https://www.avanza.se/placera/forstasidan.html">Placera</a>
+          between 2010-01-01 and 2019-03-19, and 120 799 comments from
+          <a href="https://shareville.se/activity/comments">Shareville</a>
+          between . Stock prices has been gathered between 2014-03-24 and
+          2019-03-20
+        </p>
+        <p>
+          Stock prices for 675 stock in OMX Stockholm and First North were
+          gathered from
+          <a href="http://www.nasdaqomxnordic.com/shares/historicalprices"
+            >Nasaq</a
+          >
+          between 2010-01-01 and 2019-03-19. Using an online lookup for swedish
+          holidays, each data point is associated with the opening date-time and
+          the previous closing date-time, adjusted for weekends and holidays.
+          Furthermore, to keep datapoints independent, values of previous day
+          was added. It should be noted that these values are not adjusted for splits. An example of datapoints can be seen below:
+          <img src="table.png" />
+        </p>
+      </section>
+
+      <section>
+        <h1>Preprocessing</h1>
+        <h2>Extracting the time</h2>
+        <p>
+          First step of preprocessing has been to extract date-times from the
+          news articles, which was straight forward as the times were part of
+          the scraped html code. Below is the resulting hourly distribution.
+
+          <iframe
+            width="900"
+            height="400"
+            frameborder="0"
+            scrolling="no"
+            src="//plot.ly/~antonstenaxel/53.embed"
+          ></iframe>
+        </p>
+
+        <h2>Processing the Articles</h2>
+        <p>
+          Next the titles and bodies of each article was separated using the structure of the underlying html. Stop words
+          were removed based on the python library nltk's list of 114 swedish
+          stopwords. The text was split into sentences using the previously
+          mentioned library's method 
+          <a href="https://www.nltk.org/api/nltk.tokenize.html"
+            ><span class="code">sent_tokenize</span></a
+          > Then each sentence was turned into word using <a href="https://www.nltk.org/api/nltk.tokenize.html"
+            ><span class="code">word_tokenize</span></a>
+          . Each article was thus turned into a list of sentences which in turn
+          is a list of words, which were all converted to lower case. These
+          words were then subject to filtering using regular expressions. First
+          any website adress was filered out by</br>
+          <span class="code">r'.*\.(com|se|net|org)\$'</span></br>
+          followed by some commonly occuring files</br>
+          <span class="code">r'.*\.(pdf|aspx|doc|txt)$'</span></br>
+          Punctuation and digits were also filtered out and finaly any letter not present in the swedish alphabet (such as dashes used for dividers etc. ) was filtered out. 
+        </p>
+        <p>
+          Finally the text was lemmatized. The "snowball-stemmer" found in the nltk-library did not seem to work very well for swedish, a lot of words were wrongly stemmed. Instead, a list of the words in the the so far preprocessed corpus occuring a minimum of 20 times were extracted, which turned out to be 70 617 unique words. A script was set up using SAOL's (Svenska Akademins OrdLista) API and for each word the lemma was saved if it could be uniqely decided and it exsited. This worked out quite well, as 10 021 lemmas for 19 200 words could be assigned (a lot of the original 70 000 words were proper nouns etc, which have no lemma).
+        </p>
+
+        <p>In summation,</p> 
+          <p class="example">
+          I Oasmia Pharmaceutical AB (publ) (“Oasmia” eller ”Bolaget”) avhölls i dag extra bolagsstämma. Den extra bolagsstämman var sammankallad på begäran av aktieägare representerande mer än 10 procent av aktierna i Bolaget för att behandla frågan om val av styrelse för Bolaget.</p>
+
+          <p>was converted to </p>
+       <p class="example">
+        [['oasmia', 'pharmaceutical', 'ab', 'publ', 'oasmia', 'bolag', 'avhålla', 'dag', 'extra', 'bolagsstämma'], ['extra', 'bolagsstämma', 'sammankallad', 'begäran', 'aktieägare', 'representera', 'mer', 'procent', 'aktie', 'bolag', 'behandla', 'fråga', 'val', 'styrelse', 'bolag']]
+      </p>
+        
+
+      </section>
+      <section>
+        <h1>Representation</h1>
+        <h2>Word2Vec</h2>
+        <p>To represent the words numerically, a derivation of word2vec called <a href="https://arxiv.org/pdf/1607.04606.pdf">FastText</a> was implemented. In addition to word contexts it includes information about subword n-grams, which in theory should make it more resilient to morphological variation. Each word is represented by a 100-dimensional vector. For visialisation purposes, the resulting 54 484 word-vectors were projected to a two-dimensional space using t-SNE, and the resulting (quite large, it might take some time to load) plot is visible <a href="./word2vec.html" target="_blank">here</a>. The results seem quite promosing, for isntance one can zoom in on a cluster and find that three words very close to each other are "analytikerprognosen", "analytikerprognoserna" and "analytikerprognoserna". That these three are basically the same (made up) word would have been hard to catch using methods such as bag-of-words. Another interesting feature is that these are quite close to the english words "analytical" and "analytics". One can also find the words closest in the sense of geometric distance. For example, the closest words to "vinstvarning" are "vinstvarna", "rapportbesvikelse", "rapportbesvikelser", "rapportbesvikelsen", "varningsflagg", "rapportsläppet", "varningstext", "prognossänkningar", "prognossäkningen" and "kvartalsrapportering". </p>
+
+        <p>Performing a singular value decomposition of the wordvectors and plotting the cummulative sum of the singular values we can see that the typical threshold of 90% of singular values are reached at around 84 dimensions. Perhaps one can even try more dimensions. </p>
+        <iframe width="800" height="400" frameborder="0" scrolling="no" src="//plot.ly/~antonstenaxel/61.embed"></iframe>
+
+        <h2>Bag-of-Words</h2>
+      </section>
+      <section>
+        <h1>Model</h1>
+        <h2>Data-set</h2>
+        <p>
+          To build the Data-set a method <span class="code">generate_datapoints</span> was created. It generates samples where there is at least one news article present as well as a set of criteria based on the four arguments</p>
+          <ul>
+            <li>inter-day change:   $\frac{\text{open}(d)}{\text{close}(d-1)} -1$</li>
+            <li>intra-day change:   $ \frac{\text{close}(d)}{\text{open}(d)} -1$</li>
+            <li>shadow-tolerance:   $ \text{abs}{\left[1-\frac{\text{open}(d)}{\text{low}(d)}\right]} $</li>
+            <li>the trading value, which is the volume times the low price.</li>
+          </ul>  
+          <p> 
+        The listed arguemnts are for the positive samples where the intra-day change is positive, but the method also returns the negative equivalents. 
+  
+        For instance, calling <span class="code">generate_datapoints(0.02, 0.02, 0.01, 1e5)</span> results in 1480 'positive' and 1829 'negative' samples. An example of a positive datapoint is the Paxman stock on 2019-03-18 as a result of <a href="https://avanza.se/placera/pressmeddelanden/2019/03/17/paxman-ab-publ-paxman-meddelar-att-nccns-riktlinjer-nu-rekommenderar-skalpkylning-som-en-kategori-2a-behandling-for-patienter-med-brostcancer.html"> this article</a>.
+      <img id="paxman" src="ex.png" alt=""></p>
+
+
+      <h2>Training</h2>
+      </section>
+      <section><h1>Evaluation</h1></section>
+    </div>
+  </body>
+</html>

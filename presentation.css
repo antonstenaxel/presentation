@@ -1,0 +1,62 @@
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+body {
+  font-family: 'Lato', sans-serif;
+  display: flex;
+  justify-content: center;
+}
+.container {
+  text-align: center;
+  max-width: 900px;
+}
+
+h1 {
+  font-size: 2rem;
+  font-weight: 200;
+  margin: 0.7rem;
+}
+
+h2 {
+  font-size: 1.2rem;
+  font-weight: 400;
+}
+p {
+  line-height: 1.35rem;
+  font-weight: 200;
+  margin: 0.5rem;
+}
+
+section {
+  margin: 5rem;
+}
+li {
+  line-height: 1.35rem;
+  font-weight: 200;
+  margin: 0.5rem;
+}
+ul {
+  list-style: none;
+}
+img {
+  margin: 1rem;
+  width: 100%;
+}
+.code {
+  padding: 2px;
+  background-color: lightgray;
+  text-decoration: none;
+  color: black;
+  font-family: 'Courier New', Courier, monospace;
+}
+
+.example {
+  background-color: beige;
+}
+
+#paxman {
+  width: 500px;
+}
